@@ -86,8 +86,16 @@ data = [
 # Create a DataFrame
 df = pd.DataFrame(data, columns=["Name", "Team", "Team Name"])
 
+# Function to search for a name
+def search_name(name):
+    name = name.lower()
+    for index, row in df.iterrows():
+        if name in row['Name'].lower():
+            return row
+    return None
+
 # Streamlit app
-st.title("Team Finder")
+st.title("AECOM Quiz Team Finder")
 
 # Add information about random team generation and contact person
 st.info("Note: Teams were generated randomly. For any queries, please contact Mark Kirkpatrick.")
@@ -96,12 +104,11 @@ st.info("Note: Teams were generated randomly. For any queries, please contact Ma
 name = st.text_input("Enter your name:")
 
 if name:
-    # Search for the name in the DataFrame
-    result = df[df["Name"].str.lower().str.contains(name.lower())]
+    result = search_name(name)
     
-    if not result.empty:
-        team_number = result.iloc[0]['Team']
-        team_name = result.iloc[0]['Team Name']
+    if result is not None:
+        team_number = result['Team']
+        team_name = result['Team Name']
         st.success(f"You are on Team {team_number}: {team_name}")
         
         # Display team members
@@ -111,6 +118,7 @@ if name:
             st.write(f"- {member}")
     else:
         st.error("Name not found. Please check the spelling and try again.")
+        st.write("Tip: You can enter just part of your name, like your first name or last name.")
 
 # Display the full team list
 if st.checkbox("Show full team list"):
@@ -118,4 +126,4 @@ if st.checkbox("Show full team list"):
 
 # Add a footer
 st.markdown("---")
-st.markdown("Created with ❤️ using Streamlit")
+st.markdown("Created for AECOM Quiz Night")
