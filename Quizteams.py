@@ -88,9 +88,10 @@ df = pd.DataFrame(data, columns=["Name", "Team", "Team Name"])
 
 # Function to search for a name
 def search_name(name):
-    name = name.lower()
+    name_parts = name.lower().split()
     for index, row in df.iterrows():
-        if name in row['Name'].lower():
+        full_name = row['Name'].lower()
+        if all(part in full_name for part in name_parts):
             return row
     return None
 
@@ -118,7 +119,7 @@ if name:
             st.write(f"- {member}")
     else:
         st.error("Name not found. Please check the spelling and try again.")
-        st.write("Tip: You can enter just part of your name, like your first name or last name.")
+        st.write("Tip: You can enter your first name, last name, or both in any order.")
 
 # Display the full team list
 if st.checkbox("Show full team list"):
