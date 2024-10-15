@@ -1,5 +1,7 @@
 import streamlit as st
 import pandas as pd
+from datetime import datetime, timedelta
+import random
 
 # Define the data
 data = [
@@ -99,8 +101,58 @@ def search_name(name):
 # Set up the Streamlit page
 st.set_page_config(page_title="AECOM Quiz Team Finder", page_icon="🔍", layout="wide")
 
+# Dark mode toggle
+if 'dark_mode' not in st.session_state:
+    st.session_state.dark_mode = False
+
+def toggle_dark_mode():
+    st.session_state.dark_mode = not st.session_state.dark_mode
+
+st.sidebar.button("Toggle Dark/Light Mode", on_click=toggle_dark_mode)
+
+if st.session_state.dark_mode:
+    st.markdown("""
+    <style>
+    .stApp {
+        background-color: #2b2b2b;
+        color: #ffffff;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+# Welcome message and instructions
+st.title("Welcome to AECOM Quiz Team Finder! 🎉")
+st.markdown("""
+This app helps you find your team for the upcoming AECOM Quiz Night. Here's how to use it:
+1. Enter your name in the search box below
+2. View your team information and teammates
+3. Explore other features like team statistics and the full team list
+""")
+
+# Countdown timer
+quiz_date = datetime(2024, 10, 20, 19, 0)  # Adjust to your actual quiz date and time
+now = datetime.now()
+time_left = quiz_date - now
+
+st.sidebar.header("Quiz Countdown")
+st.sidebar.write(f"Days: {time_left.days}")
+st.sidebar.write(f"Hours: {time_left.seconds // 3600}")
+st.sidebar.write(f"Minutes: {(time_left.seconds % 3600) // 60}")
+
+# Random fun facts
+fun_facts = [
+    "AECOM has been recognized as one of the World's Most Ethical Companies.",
+    "The average person uses 80-100 gallons of water per day.",
+    "AECOM has worked on projects in more than 150 countries.",
+    "Only 3% of the Earth's water is freshwater.",
+    "AECOM was founded in 1990.",
+]
+
+st.sidebar.header("Did You Know?")
+st.sidebar.write(random.choice(fun_facts))
+
 # Title and information
-st.title("AECOM Quiz Team Finder")
+st.header("Find Your Team")
 st.info("Note: Teams were generated randomly. For any queries, please contact Mark Kirkpatrick.")
 
 # Name search functionality
@@ -129,6 +181,7 @@ if name:
     else:
         st.error("Name not found. Please check the spelling and try again.")
         st.write("Tip: You can enter your first name, last name, or both in any order. The search is case-insensitive.")
+        st.warning("If your name doesn't appear, please see Mark Kirkpatrick for assistance.")
 
 # Display the full team list
 if st.checkbox("Show full team list"):
@@ -155,6 +208,13 @@ if team_search:
         st.dataframe(matching_teams)
     else:
         st.write("No matching teams found.")
+
+# Feedback form
+st.header("We'd Love Your Feedback!")
+feedback = st.text_area("Please share your thoughts or suggestions about the quiz night or this app:")
+if st.button("Submit Feedback"):
+    # In a real app, you'd save this feedback to a database or send it via email
+    st.success("Thank you for your feedback! We appreciate your input.")
 
 # Footer
 st.markdown("---")
