@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import random
 
 # Define the data
 data = [
@@ -87,6 +88,9 @@ data = [
 # Create a DataFrame
 df = pd.DataFrame(data, columns=["Name", "Team", "Team Name"])
 
+# Generate a color for each team
+team_colors = {team: f"#{random.randint(0, 0xFFFFFF):06x}" for team in df['Team'].unique()}
+
 # Function to search for a name
 def search_name(name):
     name_parts = name.lower().split()
@@ -96,7 +100,31 @@ def search_name(name):
             return row
     return None
 
+# Function to create a popup with team information
+def create_team_popup(team_number, team_name, team_members, team_color):
+    popup_html = f"""
+    <div style="
+        background-color: {team_color};
+        padding: 20px;
+        border-radius: 10px;
+        color: white;
+        text-align: center;
+    ">
+        <h2>Team {team_number}: {team_name}</h2>
+        <h3>Team Members:</h3>
+        <ul style="list-style-type: none; padding: 0;">
+    """
+    for member in team_members:
+        popup_html += f"<li>{member}</li>"
+    popup_html += """
+        </ul>
+    </div>
+    """
+    return popup_html
+
 # Streamlit app
+st.set_page_config(page_title="AECOM Quiz Team Finder", page_icon="🔍", layout="wide")
+
 st.title("AECOM Quiz Team Finder")
 
 # Add information about random team generation and contact person
@@ -111,21 +139,28 @@ if name:
     if result is not None:
         team_number = result['Team']
         team_name = result['Team Name']
-        st.success(f"You are on Team {team_number}: {team_name}")
+        team_color = team_colors[team_number]
+        
+        # Display team information with color
+        st.markdown(f'<h2 style="color:{team_color};">You are on Team {team_number}: {team_name}</h2>', unsafe_allow_html=True)
         
         # Display team members
         st.subheader("Your Team Members:")
         team_members = df[df["Team"] == team_number]["Name"].tolist()
         for member in team_members:
             st.write(f"- {member}")
+        
+        # Create and display the popup
+        popup_html = create_team_popup(team_number, team_name, team_members, team_color)
+        st.markdown(popup_html, unsafe_allow_html=True)
     else:
         st.error("Name not found. Please check the spelling and try again.")
-        st.write("Tip: You can enter your first name, last name, or both in any order.")
+        st.write("Tip: You can enter your first name, last name, or both in any order. The search is case-insensitive.")
 
 # Display the full team list
 if st.checkbox("Show full team list"):
-    st.dataframe(df)
+    st.dataframe(df.style.apply(lambda x: [f'background-color: {team_colors[team]}' for team in x['Team']], axis=1))
 
 # Add a footer
 st.markdown("---")
-st.markdown("Created for AECOM Quiz Night")
+st.ma
