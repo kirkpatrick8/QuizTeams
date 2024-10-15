@@ -130,7 +130,7 @@ This app helps you find your team for the upcoming AECOM Quiz Night. Here's how 
 """)
 
 # Countdown timer
-quiz_date = datetime(2024, 10, 20, 19, 0)  # Adjust to your actual quiz date and time
+quiz_date = datetime(2023, 10, 17, 17, 30)  # Adjust to your actual quiz date and time
 now = datetime.now()
 time_left = quiz_date - now
 
