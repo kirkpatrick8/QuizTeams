@@ -90,46 +90,38 @@ df = pd.DataFrame(data, columns=["Name", "Team", "Team Name"])
 # Function to search for a name
 def search_name(name):
     name_parts = name.lower().split()
-    for index, row in df.iterrows():
-        full_name = row['Name'].lower()
-        if all(part in full_name for part in name_parts):
-            return row
-    return None
+    return df[df['Name'].apply(lambda x: all(part in x.lower() for part in name_parts))]
 
-# Streamlit app
+# Set up the Streamlit page
 st.set_page_config(page_title="AECOM Quiz Team Finder", page_icon="🔍", layout="wide")
 
+# Title and information
 st.title("AECOM Quiz Team Finder")
-
-# Add information about random team generation and contact person
 st.info("Note: Teams were generated randomly. For any queries, please contact Mark Kirkpatrick.")
 
-# Input field for the name
+# Name search functionality
 name = st.text_input("Enter your name:")
 
 if name:
-    result = search_name(name)
-    
-    if result is not None:
-        team_number = result['Team']
-        team_name = result['Team Name']
-        
-        # Display team information
-        st.success(f"You are on Team {team_number}: {team_name}")
-        
-        # Display team members
-        st.subheader("Your Team Members:")
-        team_members = df[df["Team"] == team_number]["Name"].tolist()
-        for member in team_members:
-            st.write(f"- {member}")
-        
-        # Display team information in a more visually appealing way
-        col1, col2 = st.columns(2)
-        with col1:
-            st.metric("Team Number", team_number)
-        with col2:
-            st.metric("Team Name", team_name)
-        
+    results = search_name(name)
+    if not results.empty:
+        for _, result in results.iterrows():
+            team_number = result['Team']
+            team_name = result['Team Name']
+            st.success(f"You are on Team {team_number}: {team_name}")
+            
+            # Display team members
+            st.subheader("Your Team Members:")
+            team_members = df[df["Team"] == team_number]["Name"].tolist()
+            for member in team_members:
+                st.write(f"- {member}")
+            
+            # Display team information in a more visually appealing way
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric("Team Number", team_number)
+            with col2:
+                st.metric("Team Name", team_name)
     else:
         st.error("Name not found. Please check the spelling and try again.")
         st.write("Tip: You can enter your first name, last name, or both in any order. The search is case-insensitive.")
@@ -138,7 +130,7 @@ if name:
 if st.checkbox("Show full team list"):
     st.dataframe(df)
 
-# Add team statistics
+# Team statistics
 if st.checkbox("Show team statistics"):
     st.subheader("Team Statistics")
     total_participants = len(df)
@@ -149,7 +141,7 @@ if st.checkbox("Show team statistics"):
     team_sizes = df['Team'].value_counts().sort_index()
     st.bar_chart(team_sizes)
 
-# Add a search feature for team names
+# Team name search
 st.subheader("Search for a Team")
 team_search = st.text_input("Enter a team name:")
 if team_search:
@@ -160,6 +152,6 @@ if team_search:
     else:
         st.write("No matching teams found.")
 
-# Add a footer
+# Footer
 st.markdown("---")
 st.write("Created for AECOM Quiz Night")
