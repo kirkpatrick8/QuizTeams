@@ -2,109 +2,63 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
 import random
+from github import Github
+import io
 
-# Define the data
-data = [
-    ["Davey, Michael", 1, "Finding Nemo"],
-    ["Morris, Jonathan", 1, "Finding Nemo"],
-    ["O Connor, Adrian", 1, "Finding Nemo"],
-    ["OCallaghan, Lissa", 1, "Finding Nemo"],
-    ["Pollock, Karen", 1, "Finding Nemo"],
-    ["Shaw, Peter", 1, "Finding Nemo"],
-    ["Bradley, Kevin", 2, "Flow Force"],
-    ["Clarke, Ryan", 2, "Flow Force"],
-    ["Devlin, Caoimhe", 2, "Flow Force"],
-    ["Jamgade, Deepak", 2, "Flow Force"],
-    ["Knox, Seana", 2, "Flow Force"],
-    ["Toner, Leon", 2, "Flow Force"],
-    ["Cooper, Jane", 3, "Wave Wizards"],
-    ["Hewes, Selene", 3, "Wave Wizards"],
-    ["Kelly, Tess", 3, "Wave Wizards"],
-    ["McCallion, Emma", 3, "Wave Wizards"],
-    ["Millen, Emma", 3, "Wave Wizards"],
-    ["Thomas, Kelly", 3, "Wave Wizards"],
-    ["Cammock, Lauren", 4, "Splash Squad"],
-    ["Glackin, Ellie", 4, "Splash Squad"],
-    ["Goulding, Andrew", 4, "Splash Squad"],
-    ["Lavery, Alan (Belfast)", 4, "Splash Squad"],
-    ["McBride, Alastair", 4, "Splash Squad"],
-    ["Mclaughlin, Shane", 4, "Splash Squad"],
-    ["Agnew, David", 5, "Pipe Pipers"],
-    ["Devlin, Arthur", 5, "Pipe Pipers"],
-    ["Kirkpatrick, Mark", 5, "Pipe Pipers"],
-    ["Mc Cambridge, Fergus", 5, "Pipe Pipers"],
-    ["McKendry, Julie", 5, "Pipe Pipers"],
-    ["McManus, Sam", 5, "Pipe Pipers"],
-    ["Halliday, Andrew", 6, "Liquid Logic"],
-    ["Hughes, James", 6, "Liquid Logic"],
-    ["Killough, Jamie", 6, "Liquid Logic"],
-    ["Mcconnell, Michael (Belfast)", 6, "Liquid Logic"],
-    ["McEvoy, Orla", 6, "Liquid Logic"],
-    ["Ritchie, Matthew", 6, "Liquid Logic"],
-    ["Lawther, Sasha", 7, "H2O just add water"],
-    ["McAleese, Paul", 7, "H2O just add water"],
-    ["McCarron, Emma", 7, "H2O just add water"],
-    ["McClean, Shane", 7, "H2O just add water"],
-    ["Morgan, Connor", 7, "H2O just add water"],
-    ["Wade, Joseph", 7, "H2O just add water"],
-    ["Bell, Joel", 8, "G.I.Guessing"],
-    ["Brown, Megan", 8, "G.I.Guessing"],
-    ["Deakin, Lewis", 8, "G.I.Guessing"],
-    ["Johnston, Gordon", 8, "G.I.Guessing"],
-    ["Kelly, Grainne", 8, "G.I.Guessing"],
-    ["Tohill, Therese", 8, "G.I.Guessing"],
-    ["Cunningham, Keith", 9, "Wastewater trivia works"],
-    ["Knox, Peter", 9, "Wastewater trivia works"],
-    ["McEneaney, Sasha", 9, "Wastewater trivia works"],
-    ["Mckillen, David", 9, "Wastewater trivia works"],
-    ["Murray, John", 9, "Wastewater trivia works"],
-    ["Sadowski, Damian", 9, "Wastewater trivia works"],
-    ["Briggs, Gareth", 10, "The Filtration Faction"],
-    ["Gould, Mark", 10, "The Filtration Faction"],
-    ["Keys, Claire", 10, "The Filtration Faction"],
-    ["Lough, Robbie", 10, "The Filtration Faction"],
-    ["Christine McGrath", 10, "The Filtration Faction"],
-    ["McGuigan, Dearbhla", 10, "The Filtration Faction"],
-    ["Bain, Rowan", 11, "Reservoir Rangers"],
-    ["Cheng, Andrew", 11, "Reservoir Rangers"],
-    ["Lennon, Brian", 11, "Reservoir Rangers"],
-    ["Martin, Stephanie", 11, "Reservoir Rangers"],
-    ["McAuley, Finn", 11, "Reservoir Rangers"],
-    ["Valentim Gomes, Ludmila", 11, "Reservoir Rangers"],
-    ["Bell, David", 12, "Tide Team Six"],
-    ["Berry, Seth", 12, "Tide Team Six"],
-    ["Donaldson, Samuel", 12, "Tide Team Six"],
-    ["Kerr, Michael", 12, "Tide Team Six"],
-    ["Brown, James", 12, "Tide Team Six"],
-    ["Burleigh, Carrie", 13, "The Pressure Pros"],
-    ["Finlay, Hannah", 13, "The Pressure Pros"],
-    ["Heyburn, Philip", 13, "The Pressure Pros"],
-    ["Mathew, Sherin", 13, "The Pressure Pros"],
-    ["Reddy, Devan", 13, "The Pressure Pros"],
-    ["Joanne Titterington", 13, "The Pressure Pros"],
-    ["Teixeira Gomes, Edgar", 14, "Droplet Dynamos"],
-    ["Bright, Robert", 14, "Droplet Dynamos"],
-    ["PONGASSERIL SANTHOSH, SREE", 14, "Droplet Dynamos"],
-    ["Sanders, Adam", 14, "Droplet Dynamos"]
-]
+# GitHub repository details
+GITHUB_TOKEN = st.secrets["github"]["GITHUB_TOKEN"]
+REPO_NAME = "your-github-username/your-repo-name"
+BRANCH_NAME = "main"
+FILE_PATH = "team_assignments.csv"
 
-# Create a DataFrame
-df = pd.DataFrame(data, columns=["Name", "Team", "Team Name"])
+# Initialize GitHub client
+g = Github(GITHUB_TOKEN)
+repo = g.get_repo(REPO_NAME)
+
+# Function to load existing team assignments
+@st.cache_data(ttl=60)  # Cache for 60 seconds
+def load_team_data():
+    try:
+        content = repo.get_contents(FILE_PATH, ref=BRANCH_NAME)
+        df = pd.read_csv(io.StringIO(content.decoded_content.decode()))
+        st.sidebar.write(f"Loaded {len(df)} team assignments")
+        return df
+    except Exception as e:
+        st.sidebar.error(f"Error loading team data: {e}")
+        return pd.DataFrame(columns=["Name", "Team", "Team Name"])
+
+# Function to save new team assignment
+def save_team_assignment(new_assignment):
+    try:
+        df = load_team_data()
+        df = pd.concat([df, pd.DataFrame([new_assignment])], ignore_index=True)
+        
+        # Convert DataFrame to CSV string
+        csv_string = df.to_csv(index=False)
+        
+        # Update the file in the repository
+        contents = repo.get_contents(FILE_PATH, ref=BRANCH_NAME)
+        repo.update_file(FILE_PATH, f"Update team assignments - {datetime.now()}", csv_string, contents.sha, branch=BRANCH_NAME)
+        
+        st.sidebar.success("Saved team assignment successfully")
+        # Clear the cache to force a reload of the data
+        load_team_data.clear()
+    except Exception as e:
+        st.sidebar.error(f"Error saving team assignment: {e}")
 
 # Function to search for a name
-def search_name(name):
+def search_name(name, df):
     name_parts = name.lower().split()
     return df[df['Name'].apply(lambda x: all(part in x.lower() for part in name_parts))]
 
 # Function to assign to a random team
-def assign_random_team(name):
+def assign_random_team(name, df):
     teams = df['Team'].unique()
     team_sizes = df['Team'].value_counts()
     smallest_teams = team_sizes[team_sizes == team_sizes.min()].index
     assigned_team = random.choice(smallest_teams)
-    new_row = pd.DataFrame([[name, assigned_team, df[df['Team'] == assigned_team]['Team Name'].iloc[0]]], 
-                           columns=["Name", "Team", "Team Name"])
-    return pd.concat([df, new_row], ignore_index=True)
+    team_name = df[df['Team'] == assigned_team]['Team Name'].iloc[0]
+    return {"Name": name, "Team": assigned_team, "Team Name": team_name}
 
 # Set up the Streamlit page
 st.set_page_config(page_title="AECOM Quiz Team Finder", page_icon="🔍", layout="wide")
@@ -144,11 +98,14 @@ st.sidebar.write(f"Minutes: {(time_left.seconds % 3600) // 60}")
 st.header("Find Your Team")
 st.info("Note: Teams were generated randomly. For any queries, please contact Mark Kirkpatrick.")
 
+# Load existing team data
+df = load_team_data()
+
 # Name search functionality
 name = st.text_input("Enter your name:")
 
 if name:
-    results = search_name(name)
+    results = search_name(name, df)
     if not results.empty:
         for _, result in results.iterrows():
             team_number = result['Team']
@@ -169,13 +126,16 @@ if name:
                 st.metric("Team Name", team_name)
     else:
         st.warning("Name not found. Assigning you to a random team...")
-        df = assign_random_team(name)
-        new_team = df[df['Name'] == name].iloc[0]
-        st.success(f"You have been assigned to Team {new_team['Team']}: {new_team['Team Name']}")
+        new_assignment = assign_random_team(name, df)
+        save_team_assignment(new_assignment)
+        st.success(f"You have been assigned to Team {new_assignment['Team']}: {new_assignment['Team Name']}")
+        
+        # Reload the data to include the new assignment
+        df = load_team_data()
         
         # Display team members
         st.subheader("Your Team Members:")
-        team_members = df[df["Team"] == new_team['Team']]["Name"].tolist()
+        team_members = df[df["Team"] == new_assignment['Team']]["Name"].tolist()
         for member in team_members:
             st.write(f"- {member}")
 
@@ -208,3 +168,12 @@ if team_search:
 # Footer
 st.markdown("---")
 st.write("Created for AECOM Quiz Night")
+
+# Add a download button for the team assignments
+csv = df.to_csv(index=False)
+st.download_button(
+    label="Download Team Assignments CSV",
+    data=csv,
+    file_name='team_assignments.csv',
+    mime='text/csv'
+)
