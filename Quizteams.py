@@ -6,7 +6,7 @@ from github import Github
 import io
 
 # GitHub repository details
-GITHUB_TOKEN = "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"  # CAUTION: Never share or commit this token
+GITHUB_TOKEN = "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"  # CAUTION: Never share or commit this token
 REPO_NAME = "your-github-username/aecom-quiz-team-finder"
 BRANCH_NAME = "main"
 FILE_PATH = "team_assignments.csv"
