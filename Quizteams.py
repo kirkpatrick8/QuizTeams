@@ -7,7 +7,7 @@ import io
 
 # GitHub repository details
 GITHUB_TOKEN = st.secrets["QUIZ_SECRET"]
-REPO_NAME = "kirkpatrick8/aecom-quiz-team-finder"
+REPO_NAME = "kirkpatrick8/QuizTeams"  # Updated to match your actual repository name
 BRANCH_NAME = "main"
 FILE_PATH = "team_assignments.csv"
 
