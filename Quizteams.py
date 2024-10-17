@@ -6,8 +6,8 @@ from github import Github
 import io
 
 # GitHub repository details
-GITHUB_TOKEN = st.secrets["github"]["GITHUB_TOKEN"]
-REPO_NAME = "your-github-username/your-repo-name"
+GITHUB_TOKEN = "your-actual-github-token-here"  # CAUTION: Never share or commit this token
+REPO_NAME = "your-github-username/aecom-quiz-team-finder"
 BRANCH_NAME = "main"
 FILE_PATH = "team_assignments.csv"
 
